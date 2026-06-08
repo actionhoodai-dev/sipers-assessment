@@ -184,12 +184,18 @@ export default function HomePage() {
         if (num < 100) {
           newErrors.patientId = "Patient ID number must be 100 or greater";
         } else {
-          // Verify unique patientId
+          // Verify unique patientId - allow duplicate ONLY IF the name is the same (representing a re-assessment)
           const isDuplicate = history.some(
-            (item) => item.childInfo?.patientId?.trim() === pid
+            (item) =>
+              item.childInfo?.patientId?.trim() === pid &&
+              item.childInfo?.childName?.trim().toLowerCase() !==
+                childInfo.childName?.trim().toLowerCase()
           );
           if (isDuplicate) {
-            newErrors.patientId = "Patient ID already exists. Please enter a unique ID.";
+            const existingRecord = history.find(
+              (item) => item.childInfo?.patientId?.trim() === pid
+            );
+            newErrors.patientId = `Patient ID already belongs to another patient: "${existingRecord.childInfo?.childName}"`;
           }
         }
       }
@@ -378,6 +384,19 @@ export default function HomePage() {
     }
   }, [addToast]);
 
+  /* ── Re-assess historical patient ── */
+  const handleReassess = useCallback((existingChildInfo) => {
+    setChildInfo({ ...existingChildInfo });
+    setAnswers({});
+    setErrors({});
+    setUnanswered(new Set());
+    setCurrentTab("new");
+    addToast(
+      "info",
+      `Loaded demographics for Patient ${existingChildInfo.patientId}. Ready for new assessment.`
+    );
+  }, [addToast]);
+
   /* ── Print ── */
   const handlePrint = useCallback(() => {
     window.print();
@@ -459,7 +478,7 @@ export default function HomePage() {
         </>
       ) : (
         <main className={styles.main}>
-          <HistoryTab history={history} onPDF={handleGeneratePDFHistory} />
+          <HistoryTab history={history} onPDF={handleGeneratePDFHistory} onReassess={handleReassess} />
         </main>
       )}
 

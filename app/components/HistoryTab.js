@@ -4,12 +4,12 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { SECTIONS, CHILD_FIELDS } from '../data/questions';
 import styles from './HistoryTab.module.css';
 
-export default function HistoryTab({ history = [], onPDF }) {
+export default function HistoryTab({ history = [], onPDF, onReassess }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedItem, setSelectedItem] = useState(null);
   const modalRef = useRef(null);
   const closeBtnRef = useRef(null);
-
+  
   // Filter and sort history (newest first)
   const filteredHistory = history
     .filter((item) => {
@@ -141,6 +141,13 @@ export default function HistoryTab({ history = [], onPDF }) {
                     <td className={styles.td}>{formatDate(item.timestamp)}</td>
                     <td className={`${styles.td} ${styles.tdActions}`}>
                       <button
+                        className={`${styles.btn} ${styles.btnReassess}`}
+                        onClick={() => onReassess(item.childInfo)}
+                        type="button"
+                      >
+                        Re-assess
+                      </button>
+                      <button
                         className={`${styles.btn} ${styles.btnView}`}
                         onClick={() => setSelectedItem(item)}
                         type="button"
@@ -183,6 +190,16 @@ export default function HistoryTab({ history = [], onPDF }) {
                 </p>
               </div>
               <div className={styles.modalHeaderActions}>
+                <button
+                  className={styles.modalReassessBtn}
+                  onClick={() => {
+                    onReassess(selectedItem.childInfo);
+                    setSelectedItem(null);
+                  }}
+                  type="button"
+                >
+                  Re-assess
+                </button>
                 <button
                   className={styles.modalPdfBtn}
                   onClick={() => onPDF(selectedItem.childInfo, selectedItem.answers)}

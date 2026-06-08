@@ -418,6 +418,33 @@
   border: 1px solid #CBD5E1;
 }
 
+.btnReassess {
+  background: #FEF3C7;
+  color: #D97706;
+  margin-right: 8px;
+}
+
+.btnReassess:hover {
+  background: #D97706;
+  color: #ffffff;
+}
+
+.modalReassessBtn {
+  background: #F59E0B;
+  color: #ffffff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.modalReassessBtn:hover {
+  background: #D97706;
+}
+
 @media (max-width: 768px) {
   .searchCard {
     padding: 16px 20px;
