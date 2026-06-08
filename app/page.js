@@ -6,6 +6,7 @@ import ProgressBar from "./components/ProgressBar";
 import ChildInfoSection from "./components/ChildInfoSection";
 import QuestionSection from "./components/QuestionSection";
 import ActionButtons from "./components/ActionButtons";
+import HistoryTab from "./components/HistoryTab";
 import Footer from "./components/Footer";
 import Toast from "./components/Toast";
 import ResetModal from "./components/ResetModal";
@@ -13,6 +14,7 @@ import { SECTIONS, CHILD_FIELDS } from "./data/questions";
 import styles from "./page.module.css";
 
 const STORAGE_KEY = "sipers_form_data";
+const HISTORY_KEY = "sipers_history";
 const BACKEND_URL = "https://script.google.com/macros/s/AKfycbzXwqOUt-IT5Q2o24TX0xThQpBkI1KGX4kgPBrfybRDyz5ogr9d9tdBF48ZNdzhw_fz5g/exec";
 
 function getInitialChildInfo() {
@@ -30,7 +32,29 @@ function countAnswered(answers) {
   return Object.keys(answers).length;
 }
 
+function getNextPatientId(historyList) {
+  if (!historyList || historyList.length === 0) {
+    return "S100";
+  }
+  let maxNum = 99;
+  historyList.forEach((item) => {
+    const pid = item.childInfo?.patientId;
+    if (pid && typeof pid === "string") {
+      const match = pid.match(/^S(\d+)$/);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (num > maxNum) {
+          maxNum = num;
+        }
+      }
+    }
+  });
+  return `S${maxNum + 1}`;
+}
+
 export default function HomePage() {
+  const [currentTab, setCurrentTab] = useState("new");
+  const [history, setHistory] = useState([]);
   const [childInfo, setChildInfo] = useState(getInitialChildInfo);
   const [answers, setAnswers] = useState(getInitialAnswers);
   const [errors, setErrors] = useState({});
@@ -44,15 +68,45 @@ export default function HomePage() {
   /* ── Load from localStorage on mount ── */
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
+    let historyList = [];
+    try {
+      const savedHistory = localStorage.getItem(HISTORY_KEY);
+      if (savedHistory) {
+        historyList = JSON.parse(savedHistory);
+        setHistory(historyList);
+      }
+    } catch {
+      /* ignore */
+    }
+
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed.childInfo) setChildInfo(parsed.childInfo);
+        if (parsed.childInfo) {
+          // If loaded childInfo doesn't have a patient ID or it's empty, auto-generate it
+          if (!parsed.childInfo.patientId) {
+            parsed.childInfo.patientId = getNextPatientId(historyList);
+          }
+          setChildInfo(parsed.childInfo);
+        } else {
+          setChildInfo({
+            ...getInitialChildInfo(),
+            patientId: getNextPatientId(historyList),
+          });
+        }
         if (parsed.answers) setAnswers(parsed.answers);
+      } else {
+        setChildInfo({
+          ...getInitialChildInfo(),
+          patientId: getNextPatientId(historyList),
+        });
       }
     } catch {
-      /* ignore corrupt data */
+      setChildInfo({
+        ...getInitialChildInfo(),
+        patientId: getNextPatientId(historyList),
+      });
     }
     setHasLoaded(true);
   }, []);
@@ -111,11 +165,35 @@ export default function HomePage() {
   /* ── Validation ── */
   const validate = useCallback(() => {
     const newErrors = {};
+    
+    // Check all fields first
     CHILD_FIELDS.forEach((field) => {
       if (!childInfo[field.id] || !childInfo[field.id].trim()) {
         newErrors[field.id] = `${field.label} is required`;
       }
     });
+
+    // Specific Patient ID format validation (S100, S101, etc.)
+    const pid = childInfo.patientId ? childInfo.patientId.trim() : "";
+    if (pid && !newErrors.patientId) {
+      const match = pid.match(/^S(\d+)$/);
+      if (!match) {
+        newErrors.patientId = "Patient ID must start with S followed by a number (e.g., S100)";
+      } else {
+        const num = parseInt(match[1], 10);
+        if (num < 100) {
+          newErrors.patientId = "Patient ID number must be 100 or greater";
+        } else {
+          // Verify unique patientId
+          const isDuplicate = history.some(
+            (item) => item.childInfo?.patientId?.trim() === pid
+          );
+          if (isDuplicate) {
+            newErrors.patientId = "Patient ID already exists. Please enter a unique ID.";
+          }
+        }
+      }
+    }
 
     const allQuestionIds = SECTIONS.flatMap((s) =>
       s.questions.map((q) => q.id)
@@ -141,7 +219,7 @@ export default function HomePage() {
     }
 
     return !hasFieldErrors && !hasMissingAnswers;
-  }, [childInfo, answers]);
+  }, [childInfo, answers, history]);
 
   /* ── Build payload ── */
   const buildPayload = useCallback(() => {
@@ -163,6 +241,7 @@ export default function HomePage() {
       locationType: childInfo.locationType || "",
       familyType: childInfo.familyType || "",
       birthOrder: childInfo.birthOrder || "",
+      patientId: childInfo.patientId || "",
       answers: answersArray,
     };
   }, [childInfo, answers]);
@@ -170,7 +249,10 @@ export default function HomePage() {
   /* ── Save ── */
   const handleSave = useCallback(async () => {
     if (!validate()) {
-      addToast("error", "Please fill in all required fields and answer all questions before saving.");
+      addToast(
+        "error",
+        "Please fill in all required fields, ensure a unique Patient ID, and answer all questions."
+      );
       return;
     }
 
@@ -187,7 +269,34 @@ export default function HomePage() {
         throw new Error(`Server responded with status ${response.status}`);
       }
 
+      // Append saved record to Local History
+      const record = {
+        childInfo: { ...childInfo },
+        answers: { ...answers },
+        timestamp: Date.now(),
+      };
+      const newHistory = [...history, record];
+      setHistory(newHistory);
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(newHistory));
+
       addToast("success", "Assessment saved successfully!");
+
+      // Clear current form draft and auto-increment Patient ID
+      const nextId = getNextPatientId(newHistory);
+      setChildInfo({
+        ...getInitialChildInfo(),
+        patientId: nextId,
+      });
+      setAnswers({});
+      setErrors({});
+      setUnanswered(new Set());
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+      } catch {
+        /* ignore */
+      }
+      window.scrollTo({ top: 0, behavior: "smooth" });
+
     } catch (err) {
       addToast(
         "error",
@@ -196,12 +305,56 @@ export default function HomePage() {
     } finally {
       setIsSaving(false);
     }
-  }, [validate, buildPayload, addToast]);
+  }, [validate, buildPayload, childInfo, answers, history, addToast]);
 
-  /* ── Generate PDF ── */
+  /* ── Generate PDF for current form ── */
   const handleGeneratePDF = useCallback(async () => {
-    if (!validate()) {
-      addToast("error", "Please fill in all required fields and answer all questions before generating the PDF.");
+    // Validate current form
+    const newErrors = {};
+    CHILD_FIELDS.forEach((field) => {
+      if (!childInfo[field.id] || !childInfo[field.id].trim()) {
+        newErrors[field.id] = `${field.label} is required`;
+      }
+    });
+
+    // Check specific Patient ID
+    const pid = childInfo.patientId ? childInfo.patientId.trim() : "";
+    if (pid && !newErrors.patientId) {
+      const match = pid.match(/^S(\d+)$/);
+      if (!match) {
+        newErrors.patientId = "Patient ID must start with S followed by a number (e.g., S100)";
+      } else if (parseInt(match[1], 10) < 100) {
+        newErrors.patientId = "Patient ID number must be 100 or greater";
+      }
+    }
+
+    const allQuestionIds = SECTIONS.flatMap((s) =>
+      s.questions.map((q) => q.id)
+    );
+    const missing = allQuestionIds.filter((qid) => !answers[qid]);
+    const missingSet = new Set(missing);
+
+    setErrors(newErrors);
+    setUnanswered(missingSet);
+
+    const hasFieldErrors = Object.keys(newErrors).length > 0;
+    const hasMissingAnswers = missing.length > 0;
+
+    if (hasFieldErrors || hasMissingAnswers) {
+      addToast(
+        "error",
+        "Please fill in child details and answer all questions before generating a PDF."
+      );
+      if (hasFieldErrors) {
+        const firstErrorField = CHILD_FIELDS.find((f) => newErrors[f.id]);
+        if (firstErrorField) {
+          const el = document.getElementById(`field-${firstErrorField.id}`);
+          if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      } else {
+        const el = document.getElementById(`question-${missing[0]}`);
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
       return;
     }
 
@@ -212,7 +365,18 @@ export default function HomePage() {
     } catch (err) {
       addToast("error", `Failed to generate PDF. ${err.message}`);
     }
-  }, [validate, childInfo, answers, addToast]);
+  }, [childInfo, answers, addToast]);
+
+  /* ── Generate PDF for historical items ── */
+  const handleGeneratePDFHistory = useCallback(async (itemChildInfo, itemAnswers) => {
+    try {
+      const { default: generatePDF } = await import("./utils/generatePDF");
+      generatePDF(itemChildInfo, itemAnswers, SECTIONS);
+      addToast("success", "PDF generated and download started!");
+    } catch (err) {
+      addToast("error", `Failed to generate PDF. ${err.message}`);
+    }
+  }, [addToast]);
 
   /* ── Print ── */
   const handlePrint = useCallback(() => {
@@ -225,7 +389,11 @@ export default function HomePage() {
   }, []);
 
   const confirmReset = useCallback(() => {
-    setChildInfo(getInitialChildInfo());
+    const nextId = getNextPatientId(history);
+    setChildInfo({
+      ...getInitialChildInfo(),
+      patientId: nextId,
+    });
     setAnswers(getInitialAnswers());
     setErrors({});
     setUnanswered(new Set());
@@ -237,7 +405,7 @@ export default function HomePage() {
     }
     window.scrollTo({ top: 0, behavior: "smooth" });
     addToast("info", "Assessment has been reset.");
-  }, [addToast]);
+  }, [history, addToast]);
 
   const answered = countAnswered(answers);
 
@@ -252,39 +420,48 @@ export default function HomePage() {
 
   return (
     <>
-      <Header />
-      <div data-print-hide>
-        <ProgressBar answered={answered} total={25} />
-      </div>
+      <Header currentTab={currentTab} onChangeTab={setCurrentTab} />
 
-      <main className={styles.main}>
-        <ChildInfoSection
-          values={childInfo}
-          errors={errors}
-          onChange={handleChildInfoChange}
-        />
+      {currentTab === "new" ? (
+        <>
+          <div data-print-hide>
+            <ProgressBar answered={answered} total={25} />
+          </div>
 
-        {SECTIONS.map((section, idx) => (
-          <QuestionSection
-            key={section.id}
-            section={section}
-            sectionIndex={idx}
-            answers={answers}
-            onAnswer={handleAnswer}
-            unanswered={unanswered}
-          />
-        ))}
+          <main className={styles.main}>
+            <ChildInfoSection
+              values={childInfo}
+              errors={errors}
+              onChange={handleChildInfoChange}
+            />
 
-        <div data-print-hide>
-          <ActionButtons
-            onSave={handleSave}
-            onPDF={handleGeneratePDF}
-            onPrint={handlePrint}
-            onReset={handleReset}
-            isSaving={isSaving}
-          />
-        </div>
-      </main>
+            {SECTIONS.map((section, idx) => (
+              <QuestionSection
+                key={section.id}
+                section={section}
+                sectionIndex={idx}
+                answers={answers}
+                onAnswer={handleAnswer}
+                unanswered={unanswered}
+              />
+            ))}
+
+            <div data-print-hide>
+              <ActionButtons
+                onSave={handleSave}
+                onPDF={handleGeneratePDF}
+                onPrint={handlePrint}
+                onReset={handleReset}
+                isSaving={isSaving}
+              />
+            </div>
+          </main>
+        </>
+      ) : (
+        <main className={styles.main}>
+          <HistoryTab history={history} onPDF={handleGeneratePDFHistory} />
+        </main>
+      )}
 
       <Footer />
       <Toast toasts={toasts} onDismiss={dismissToast} />

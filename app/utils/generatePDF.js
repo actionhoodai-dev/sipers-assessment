@@ -73,6 +73,7 @@ export default function generatePDF(childInfo, answers, sections) {
   currentY = drawSectionHeading('Child Information', currentY);
 
   const childFields = [
+    ['Patient ID', childInfo.patientId || ''],
     ['Child Name', childInfo.childName || ''],
     ['Age', childInfo.age || ''],
     ['Gender', childInfo.gender || ''],
@@ -208,6 +209,7 @@ export default function generatePDF(childInfo, answers, sections) {
   }
 
   // ── Save ────────────────────────────────────────────────────────
+  const safeId = (childInfo.patientId || 'Unknown').replace(/[^a-zA-Z0-9]/g, '_');
   const safeName = childName.replace(/[^a-zA-Z0-9]/g, '_');
-  doc.save(`SIPERS_Assessment_${safeName}_${fileDate}.pdf`);
+  doc.save(`SIPERS_Assessment_${safeId}_${safeName}_${fileDate}.pdf`);
 }

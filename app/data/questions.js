@@ -76,6 +76,13 @@ export const RESPONSE_OPTIONS = [
 
 export const CHILD_FIELDS = [
   {
+    id: 'patientId',
+    label: 'Patient ID',
+    type: 'text',
+    placeholder: 'e.g., S100',
+    required: true,
+  },
+  {
     id: 'childName',
     label: 'Child Name',
     type: 'text',
