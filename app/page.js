@@ -164,14 +164,8 @@ export default function HomePage() {
             };
           }).filter(item => item.childInfo.patientId); // Only keep valid records with a patientId
 
-          setHistory((prev) => {
-            const combined = [...prev, ...remoteHistory];
-            const uniqueMap = {};
-            combined.forEach((item) => {
-              const key = `${item.childInfo.patientId}_${item.timestamp}`;
-              uniqueMap[key] = item;
-            });
-            const sortedHistory = Object.values(uniqueMap).sort((a, b) => b.timestamp - a.timestamp);
+          setHistory(() => {
+            const sortedHistory = remoteHistory.sort((a, b) => b.timestamp - a.timestamp);
             
             try {
               localStorage.setItem(HISTORY_KEY, JSON.stringify(sortedHistory));
