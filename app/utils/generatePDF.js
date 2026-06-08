@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 export default function generatePDF(childInfo, answers, sections) {
   const doc = new jsPDF({
@@ -83,7 +83,7 @@ export default function generatePDF(childInfo, answers, sections) {
     ['Birth Order', childInfo.birthOrder || ''],
   ];
 
-  doc.autoTable({
+  autoTable(doc, {
     startY: currentY,
     head: [['Field', 'Details']],
     body: childFields,
@@ -138,7 +138,7 @@ export default function generatePDF(childInfo, answers, sections) {
       return [qNum, qText, response];
     });
 
-    doc.autoTable({
+    autoTable(doc, {
       startY: currentY,
       head: [['No.', 'Question', 'Response']],
       body: tableBody,
