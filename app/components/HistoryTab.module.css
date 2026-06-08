@@ -213,6 +213,7 @@
 }
 
 .modalHeader {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -460,22 +461,30 @@
   }
 
   .modalHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
     padding: 16px 20px;
+  }
+
+  .modalHeaderActions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding-right: 0;
+  }
+
+  .closeBtn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
   }
 }
 
 @media (max-width: 480px) {
   .demographicsGrid {
     grid-template-columns: 1fr;
-  }
-
-  .modalHeaderActions {
-    gap: 8px;
-  }
-
-  .modalPdfBtn {
-    padding: 6px 12px;
-    font-size: 0.76rem;
   }
 }
 
@@ -501,7 +510,7 @@
   display: none;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 1024px) {
   .desktopView {
     display: none;
   }
@@ -575,7 +584,7 @@
 
   .mobileActions {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: 1fr 1fr;
     background: #ffffff;
     padding: 12px;
     gap: 8px;
@@ -585,14 +594,22 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 12px 6px;
-    font-size: 0.82rem;
+    padding: 14px 16px;
+    font-size: 0.88rem;
     font-weight: 700;
     border-radius: 8px;
     cursor: pointer;
     border: none;
     line-height: 1;
     text-align: center;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+  }
+
+  .mobileBtn:active {
+    transform: scale(0.97);
+  }
+
+  .mobileBtn:first-child {
+    grid-column: span 2;
   }
 }
