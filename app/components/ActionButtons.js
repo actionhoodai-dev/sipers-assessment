@@ -10,7 +10,7 @@ function Spinner() {
   );
 }
 
-export default function ActionButtons({ onSave, onPDF, onPrint, onReset, isSaving = false }) {
+export default function ActionButtons({ onSave, onPDF, onReset, isSaving = false }) {
   return (
     <div className={styles.card}>
       <div className={styles.grid}>
@@ -47,20 +47,6 @@ export default function ActionButtons({ onSave, onPDF, onPrint, onReset, isSavin
             <polyline points="10,9 9,9 8,9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
           <span>Generate PDF</span>
-        </button>
-
-        {/* Print Assessment */}
-        <button
-          className={`${styles.btn} ${styles.outline}`}
-          onClick={onPrint}
-          type="button"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <polyline points="6,9 6,2 18,2 18,9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <rect x="6" y="14" width="12" height="8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          <span>Print Assessment</span>
         </button>
 
         {/* Reset Form */}
