@@ -68,7 +68,7 @@ export default function HomePage() {
   const [hasLoaded, setHasLoaded] = useState(false);
   const toastIdRef = useRef(0);
 
-  /* ── Load from localStorage on mount ── */
+  /* ── Load from localStorage and Sync from Google Sheets on mount ── */
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     let historyList = [];
@@ -117,7 +117,91 @@ export default function HomePage() {
         patientId: getNextPatientId(historyList),
       });
     }
-    setHasLoaded(true);
+
+    // Show screen immediately if we have local history cached
+    if (historyList.length > 0) {
+      setHasLoaded(true);
+    }
+
+    // Sync remote history from Google Sheets
+    const syncRemoteHistory = async () => {
+      try {
+        const res = await fetch(BACKEND_URL);
+        if (!res.ok) throw new Error("Network response not ok");
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          const remoteHistory = data.map((row) => {
+            const childInfo = {
+              childName: (row.Child_Name || row["Child Name"] || row.childName || "").trim(),
+              age: String(row.Age || row.age || "").trim(),
+              gender: (row.Gender || row.gender || "").trim(),
+              diagnosis: (row.Diagnosis || row.diagnosis || "").trim(),
+              ses: (row.SES || row.ses || "").trim(),
+              locationType: (row.Location_Type || row["Location Type"] || row.locationType || "").trim(),
+              familyType: (row.Family_Type || row["Family Type"] || row.familyType || "").trim(),
+              birthOrder: String(row.Birth_Order || row["Birth Order"] || row.birthOrder || "").trim(),
+              patientId: (row.Patient_ID || row["Patient ID"] || row.PatientId || row.patientId || "").trim(),
+            };
+
+            const answers = {};
+            Object.keys(row).forEach((key) => {
+              if (key.includes("_Q")) {
+                const val = row[key];
+                if (typeof val === "string") {
+                  const qidMatch = val.match(/questionId=([^, }]+)/);
+                  const respMatch = val.match(/response=([^, }]+)/);
+                  if (qidMatch && respMatch) {
+                    answers[qidMatch[1]] = respMatch[1];
+                  }
+                }
+              }
+            });
+
+            return {
+              childInfo,
+              answers,
+              timestamp: row.Timestamp ? new Date(row.Timestamp).getTime() : Date.now(),
+            };
+          }).filter(item => item.childInfo.patientId); // Only keep valid records with a patientId
+
+          setHistory((prev) => {
+            const combined = [...prev, ...remoteHistory];
+            const uniqueMap = {};
+            combined.forEach((item) => {
+              const key = `${item.childInfo.patientId}_${item.timestamp}`;
+              uniqueMap[key] = item;
+            });
+            const sortedHistory = Object.values(uniqueMap).sort((a, b) => b.timestamp - a.timestamp);
+            
+            try {
+              localStorage.setItem(HISTORY_KEY, JSON.stringify(sortedHistory));
+            } catch {
+              /* ignore */
+            }
+
+            // If form is untouched (except patientId), auto-update to correct next incremented ID
+            setChildInfo((currentInfo) => {
+              const isUntouched = Object.keys(currentInfo).every(
+                (key) => key === "patientId" || currentInfo[key] === ""
+              );
+              if (isUntouched) {
+                const nextId = getNextPatientId(sortedHistory);
+                return { ...currentInfo, patientId: nextId };
+              }
+              return currentInfo;
+            });
+
+            return sortedHistory;
+          });
+        }
+      } catch (err) {
+        console.error("Failed to sync remote history:", err);
+      } finally {
+        setHasLoaded(true);
+      }
+    };
+
+    syncRemoteHistory();
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect */
 
