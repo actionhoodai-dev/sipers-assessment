@@ -140,27 +140,29 @@ export default function HistoryTab({ history = [], onPDF, onReassess }) {
                     <td className={styles.td}>{item.childInfo?.diagnosis || 'N/A'}</td>
                     <td className={styles.td}>{formatDate(item.timestamp)}</td>
                     <td className={`${styles.td} ${styles.tdActions}`}>
-                      <button
-                        className={`${styles.btn} ${styles.btnReassess}`}
-                        onClick={() => onReassess(item.childInfo)}
-                        type="button"
-                      >
-                        Re-assess
-                      </button>
-                      <button
-                        className={`${styles.btn} ${styles.btnView}`}
-                        onClick={() => setSelectedItem(item)}
-                        type="button"
-                      >
-                        View
-                      </button>
-                      <button
-                        className={`${styles.btn} ${styles.btnPdf}`}
-                        onClick={() => onPDF(item.childInfo, item.answers)}
-                        type="button"
-                      >
-                        PDF
-                      </button>
+                      <div className={styles.actionsWrapper}>
+                        <button
+                          className={`${styles.btn} ${styles.btnReassess}`}
+                          onClick={() => onReassess(item.childInfo)}
+                          type="button"
+                        >
+                          Re-assess
+                        </button>
+                        <button
+                          className={`${styles.btn} ${styles.btnView}`}
+                          onClick={() => setSelectedItem(item)}
+                          type="button"
+                        >
+                          View
+                        </button>
+                        <button
+                          className={`${styles.btn} ${styles.btnPdf}`}
+                          onClick={() => onPDF(item.childInfo, item.answers)}
+                          type="button"
+                        >
+                          PDF
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

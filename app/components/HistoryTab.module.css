@@ -164,7 +164,6 @@
 .btnView {
   background: #E6F0FA;
   color: #2563EB;
-  margin-right: 8px;
 }
 
 .btnView:hover {
@@ -421,7 +420,6 @@
 .btnReassess {
   background: #FEF3C7;
   color: #D97706;
-  margin-right: 8px;
 }
 
 .btnReassess:hover {
@@ -481,5 +479,19 @@
   .modalPdfBtn {
     padding: 6px 12px;
     font-size: 0.76rem;
+  }
+}
+
+.actionsWrapper {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+@media (min-width: 768px) {
+  .actionsWrapper {
+    flex-wrap: nowrap;
   }
 }
