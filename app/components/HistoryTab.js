@@ -122,7 +122,8 @@ export default function HistoryTab({ history = [], onPDF, onReassess }) {
           </div>
         ) : (
           <div className={styles.tableResponsive}>
-            <table className={styles.table}>
+            {/* Desktop Table View */}
+            <table className={`${styles.table} ${styles.desktopView}`}>
               <thead>
                 <tr>
                   <th className={styles.th}>Patient ID</th>
@@ -142,21 +143,21 @@ export default function HistoryTab({ history = [], onPDF, onReassess }) {
                     <td className={`${styles.td} ${styles.tdActions}`}>
                       <div className={styles.actionsWrapper}>
                         <button
-                          className={`${styles.btn} ${styles.btnReassess}`}
+                          className={`${styles.btn} ${styles.btnReassessSolid}`}
                           onClick={() => onReassess(item.childInfo)}
                           type="button"
                         >
                           Re-assess
                         </button>
                         <button
-                          className={`${styles.btn} ${styles.btnView}`}
+                          className={`${styles.btn} ${styles.btnViewSolid}`}
                           onClick={() => setSelectedItem(item)}
                           type="button"
                         >
                           View
                         </button>
                         <button
-                          className={`${styles.btn} ${styles.btnPdf}`}
+                          className={`${styles.btn} ${styles.btnPdfSolid}`}
                           onClick={() => onPDF(item.childInfo, item.answers)}
                           type="button"
                         >
@@ -168,6 +169,55 @@ export default function HistoryTab({ history = [], onPDF, onReassess }) {
                 ))}
               </tbody>
             </table>
+
+            {/* Mobile Card List View */}
+            <div className={styles.mobileView}>
+              {filteredHistory.map((item, index) => (
+                <div key={item.timestamp || index} className={styles.mobileCard}>
+                  <div className={styles.mobileCardHeader}>
+                    <span className={styles.mobilePatientId}>
+                      {item.childInfo?.patientId || 'N/A'}
+                    </span>
+                    <span className={styles.mobileDate}>
+                      {formatDate(item.timestamp)}
+                    </span>
+                  </div>
+                  <div className={styles.mobileCardBody}>
+                    <div className={styles.mobileRow}>
+                      <span className={styles.mobileLabel}>Child Name:</span>
+                      <span className={styles.mobileValue}>{item.childInfo?.childName || 'N/A'}</span>
+                    </div>
+                    <div className={styles.mobileRow}>
+                      <span className={styles.mobileLabel}>Diagnosis:</span>
+                      <span className={styles.mobileValue}>{item.childInfo?.diagnosis || 'N/A'}</span>
+                    </div>
+                  </div>
+                  <div className={styles.mobileActions}>
+                    <button
+                      className={`${styles.mobileBtn} ${styles.btnReassessSolid}`}
+                      onClick={() => onReassess(item.childInfo)}
+                      type="button"
+                    >
+                      Re-assess
+                    </button>
+                    <button
+                      className={`${styles.mobileBtn} ${styles.btnViewSolid}`}
+                      onClick={() => setSelectedItem(item)}
+                      type="button"
+                    >
+                      View
+                    </button>
+                    <button
+                      className={`${styles.mobileBtn} ${styles.btnPdfSolid}`}
+                      onClick={() => onPDF(item.childInfo, item.answers)}
+                      type="button"
+                    >
+                      PDF
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>

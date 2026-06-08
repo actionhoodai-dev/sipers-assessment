@@ -161,24 +161,31 @@
   line-height: 1;
 }
 
-.btnView {
-  background: #E6F0FA;
-  color: #2563EB;
+.btnReassessSolid {
+  background: #D97706;
+  color: #ffffff;
 }
 
-.btnView:hover {
+.btnReassessSolid:hover {
+  background: #B45309;
+}
+
+.btnViewSolid {
   background: #2563EB;
   color: #ffffff;
 }
 
-.btnPdf {
-  background: #E6F4F1;
-  color: #0D9488;
+.btnViewSolid:hover {
+  background: #1D4ED8;
 }
 
-.btnPdf:hover {
+.btnPdfSolid {
   background: #0D9488;
   color: #ffffff;
+}
+
+.btnPdfSolid:hover {
+  background: #0F766E;
 }
 
 /* Modal Overlay */
@@ -417,18 +424,8 @@
   border: 1px solid #CBD5E1;
 }
 
-.btnReassess {
-  background: #FEF3C7;
-  color: #D97706;
-}
-
-.btnReassess:hover {
-  background: #D97706;
-  color: #ffffff;
-}
-
 .modalReassessBtn {
-  background: #F59E0B;
+  background: #D97706;
   color: #ffffff;
   border: none;
   padding: 8px 16px;
@@ -440,7 +437,7 @@
 }
 
 .modalReassessBtn:hover {
-  background: #D97706;
+  background: #B45309;
 }
 
 @media (max-width: 768px) {
@@ -493,5 +490,109 @@
 @media (min-width: 768px) {
   .actionsWrapper {
     flex-wrap: nowrap;
+  }
+}
+
+.desktopView {
+  display: table;
+}
+
+.mobileView {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .desktopView {
+    display: none;
+  }
+  
+  .mobileView {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 12px;
+    background: #F8FAFC;
+  }
+
+  .mobileCard {
+    background: #ffffff;
+    border: 2px solid #E2E8F0;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .mobileCardHeader {
+    background: #F1F5F9;
+    border-bottom: 2px solid #E2E8F0;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .mobilePatientId {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #2563EB;
+  }
+
+  .mobileDate {
+    font-size: 0.74rem;
+    color: #64748B;
+    font-weight: 600;
+  }
+
+  .mobileCardBody {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border-bottom: 2px solid #E2E8F0;
+  }
+
+  .mobileRow {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .mobileLabel {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #64748B;
+    min-width: 90px;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+
+  .mobileValue {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #0F172A;
+  }
+
+  .mobileActions {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    background: #ffffff;
+    padding: 12px;
+    gap: 8px;
+  }
+
+  .mobileBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 6px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    border-radius: 8px;
+    cursor: pointer;
+    border: none;
+    line-height: 1;
+    text-align: center;
+    transition: background-color 0.2s ease;
   }
 }
