@@ -177,21 +177,7 @@ export default function generatePDF(childInfo, answers, sections) {
     currentY = doc.lastAutoTable.finalY + 10;
   });
 
-  // ── Signature Line ──────────────────────────────────────────────
-  if (currentY > pageHeight - 40) {
-    doc.addPage();
-    currentY = 30;
-  }
 
-  const signatureY = currentY + 15;
-  doc.setDrawColor(...colors.secondary);
-  doc.setLineWidth(0.4);
-  doc.line(marginLeft, signatureY, marginLeft + 80, signatureY);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.setTextColor(...colors.textMuted);
-  doc.text('Therapist Signature & Date', marginLeft, signatureY + 5);
 
   // ── Page Numbers ────────────────────────────────────────────────
   const totalPages = doc.internal.getNumberOfPages();
